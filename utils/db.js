@@ -10,14 +10,17 @@ class DBClient {
 
     this.client = new MongoClient(url, { useUnifiedTopology: true });
 
-    // Connect to MongoDB
-    this.client.connect((err) => {
-      if (err) {
-        console.error(`MongoDB Connection Error: ${err}`);
-      } else {
-        console.log('Connected to MongoDB');
-      }
-    });
+    // Connect to MongoDB in the constructor
+    this.connectToDB();
+  }
+
+  async connectToDB() {
+    try {
+      await this.client.connect();
+      console.log('Connected to MongoDB');
+    } catch (err) {
+      console.error(`MongoDB Connection Error: ${err}`);
+    }
   }
 
   isAlive() {
@@ -25,12 +28,20 @@ class DBClient {
   }
 
   async nbUsers() {
-    const usersCollection = this.client.db().collection('users');
+    if (!this.isAlive()) {
+      console.error('Database connection is not alive.');
+      return 0; // Handle gracefully if not connected
+    }
+    const usersCollection = await this.client.db().collection('users');
     return usersCollection.countDocuments();
   }
 
   async nbFiles() {
-    const filesCollection = this.client.db().collection('files');
+    if (!this.isAlive()) {
+      console.error('Database connection is not alive.');
+      return 0; // Handle gracefully if not connected
+    }
+    const filesCollection = await this.client.db().collection('files');
     return filesCollection.countDocuments();
   }
 }
