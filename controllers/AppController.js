@@ -27,6 +27,8 @@ class AppController {
 
     res.status(200).json(stats);
   }
+
+  
 }
 
 module.exports = AppController;
