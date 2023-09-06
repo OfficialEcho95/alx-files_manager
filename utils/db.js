@@ -44,6 +44,44 @@ class DBClient {
     const filesCollection = await this.client.db().collection('files');
     return filesCollection.countDocuments();
   }
+
+  filesCollection() {
+    return this.db.collection('files');
+  }
+
+  findUserByEmail(email) {
+    return this.db.collection('users').findOne({ email });
+  }
+
+  async addUser(email, password) {
+    const hashedPassword = sha1(password);
+    const result = await this.db.collection('users').insertOne(
+      {
+        email,
+        password: hashedPassword,
+      },
+    );
+    return {
+      email: result.ops[0].email,
+      id: result.ops[0]._id,
+    };
+  }
+
+  async findUserById(userId) {
+    if (!this.isAlive()) {
+      console.error('Database connection is not alive.');
+      return null; // Handle gracefully if not connected
+    }
+
+    const usersCollection = this.client.db().collection('users');
+    try {
+      const user = await usersCollection.findOne({ _id: ObjectId(userId) });
+      return user;
+    } catch (error) {
+      console.error(`Error finding user by ID: ${error}`);
+      return null;
+    }
+  }
 }
 
 const dbClient = new DBClient();
