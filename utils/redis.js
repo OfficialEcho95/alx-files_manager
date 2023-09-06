@@ -1,70 +1,86 @@
-import { createClient } from 'redis';
-import { promisify } from 'util';
+const redis = require('redis');
 
 /**
- * A Redis client class that can be used to interact with Redis.
+ * RedisClient class for managing a Redis client.
  */
 class RedisClient {
+  /**
+   * Creates a new instance of the RedisClient class.
+   */
   constructor() {
-    this.client = createClient();
-    this.isConnected = false;
+    // Initialize the Redis client.
+    this.client = redis.createClient();
+    this.client.connected = true;
 
+    // Handle Redis client errors.
     this.client.on('error', (err) => {
-      console.log('Redis Client Error', err);
+      console.error(`${err}`);
     });
-
-    this.client.on('connect', () => {
-      this.isConnected = true;
-    });
-
-    this.asyncSetX = promisify(this.client.setex).bind(this.client);
-    this.asyncGet = promisify(this.client.get).bind(this.client);
-    this.asyncDel = promisify(this.client.del).bind(this.client);
-    this.asyncExpire = promisify(this.client.expire).bind(this.client);
   }
 
   /**
-   * Determines if the client is alive by pinging it.
-   *
-   * @return {boolean} Returns true if the client is alive, false otherwise.
+   * Checks if the Redis client is alive (connected).
+   * @returns {boolean} True if the client is connected, otherwise false.
    */
   isAlive() {
-    return this.isConnected;
+    return this.client.connected;
   }
 
   /**
-   * Sets a key-value pair and sets an expiry time for the key.
-   *
-   * @param {string} key - the key to set the value for
-   * @param {any} value - the value to set for the key
-   * @param {number} expiry - the time in seconds for the key to expire
-   * @return {Promise<void>} - a Promise that resolves when the key-value pair
-   * is set and the expiry is set
+   * Retrieves the value associated with a given key from Redis.
+   * @param {string} key - The key to retrieve the value for.
+   * @returns {Promise<string|null>} A Promise that resolves to the value or null if the key doesn't exist.
    */
-  set(key, value, expiry) {
-    this.asyncSetX(key, expiry, value);
+  async get(key) {
+    return new Promise((resolve, reject) => {
+      this.client.get(key, (err, reply) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(reply);
+        }
+      });
+    });
   }
 
   /**
-   * Retrieves the value associated with the given key.
-   *
-   * @param {string} key - the key to retrieve the value for
-   * @return {*} the value associated with the given key
+   * Sets a key-value pair in Redis with an expiration time.
+   * @param {string} key - The key to set.
+   * @param {string} value - The value to associate with the key.
+   * @param {number} durationInSeconds - The expiration time in seconds.
+   * @returns {Promise<string>} A Promise that resolves when the key-value pair is set.
    */
-  get(key) {
-    return this.asyncGet(key);
+  async set(key, value, durationInSeconds) {
+    return new Promise((resolve, reject) => {
+      this.client.setex(key, durationInSeconds, value, (err, reply) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(reply);
+        }
+      });
+    });
   }
 
   /**
-   * Deletes the specified key using asynchronous delete method.
-   *
-   * @param {any} key - the key to be deleted
-   * @return {Promise} A promise that resolves after the deletion is complete
+   * Deletes a key and its associated value from Redis.
+   * @param {string} key - The key to delete.
+   * @returns {Promise<number>} A Promise that resolves with the number of keys deleted (0 or 1).
    */
-  del(key) {
-    return this.asyncDel(key);
+  async del(key) {
+    return new Promise((resolve, reject) => {
+      this.client.del(key, (err, reply) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(reply);
+        }
+      });
+    });
   }
 }
 
+// Create an instance of the RedisClient class.
 const redisClient = new RedisClient();
-export default redisClient;
+
+module.exports = redisClient;
