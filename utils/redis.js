@@ -29,7 +29,8 @@ class RedisClient {
   /**
    * Retrieves the value associated with a given key from Redis.
    * @param {string} key - The key to retrieve the value for.
-   * @returns {Promise<string|null>} A Promise that resolves to the value or null if the key doesn't exist.
+   * @returns {Promise<string|null>} A Promise that resolves
+   * to the value or null if the key doesn't exist.
    */
   async get(key) {
     return new Promise((resolve, reject) => {
