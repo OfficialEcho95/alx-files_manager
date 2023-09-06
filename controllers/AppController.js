@@ -1,9 +1,9 @@
-const RedisClient = require('../utils/redis');
-const DBClient = require('../utils/db');
+const RedisClient = require('../utils/redis'); // Import the module
+const DBClient = require('../utils/db'); // Import the DBClient module
 
 class AppController {
   static async getStatus(req, res) {
-    const redisIsAlive = RedisClient.isAlive();
+    const redisIsAlive = await RedisClient.isAlive(); // Use it as an object
     const dbIsAlive = DBClient.isAlive();
 
     const status = {
@@ -27,8 +27,6 @@ class AppController {
 
     res.status(200).json(stats);
   }
-
-  
 }
 
 module.exports = AppController;
