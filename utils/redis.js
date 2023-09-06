@@ -2,41 +2,15 @@ const redis = require('redis');
 
 class RedisClient {
   constructor() {
-    this.client = redis.createClient({ host: 'localhost', port: 6379 });
-
-    // Initialize a flag to track the connection status.
-    this.connected = false;
-
-    // Handle Redis client events.
-    this.client.on('connect', () => {
-      this.connected = true;
-      console.log('Connected to Redis');
-    });
-
-    this.client.on('error', (err) => {
-      console.error(`Redis Error: ${err}`);
-    });
-
-    this.client.on('end', () => {
-      this.connected = false;
-      console.log('Disconnected from Redis');
+    this.client = redis.createClient({ host: '127.0.0.1', port: 6379 });
+      this.client.on('error', (err) => {
+      console.error(`${err}`);
     });
   }
 
-  // Updated isAlive() method that returns a Promise.
-  async isAlive() {
-    return new Promise((resolve) => {
-      if (this.connected) {
-        resolve(true);
-      } else {
-        // Listen for the 'connect' event and resolve when connected.
-        this.client.once('connect', () => {
-          resolve(true);
-        });
-      }
-    });
+  isAlive() {
+      return this.client.connected;
   }
-
 
   async get(key) {
     return new Promise((resolve, reject) => {
